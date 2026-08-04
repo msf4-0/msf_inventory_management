@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Inventory Management{% endblock %}
+
+{% block content %}
+<header>
+    <h1>Inventory Management</h1>
+    <p>View and manage inventory items</p>
+</header>
+
+<section>
+    <h2>Add Item</h2>
+    {% include "partials/item_form.html" %}
+</section>
+
+<section style="margin-top: 2rem;">
+    <h2>Items</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Quantity</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="table-body">
+            {% for item in items %}
+                {% include "partials/item_row.html" %}
+            {% endfor %}
+        </tbody>
+    </table>
+    {% if not items %}
+    <p>No items in inventory. Add one above!</p>
+    {% endif %}
+</section>
+{% endblock %}
