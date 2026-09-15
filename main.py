@@ -116,12 +116,6 @@ def list_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     items = db.query(Item).order_by(Item.name).offset(skip).limit(limit).all()
     return items
 
-@app.delete("/items/all")
-def delete_all_items(db: Session = Depends(get_db)):
-    count = db.query(Item).delete()
-    db.commit()
-    return {"message": f"Deleted {count} items successfully"}
-
 @app.delete("/items/{item_id}")
 def delete_item_by_id(request: Request, item_id: int, db: Session = Depends(get_db)):
     item = db.query(Item).filter(Item.name == item_id).first()
@@ -134,6 +128,12 @@ def delete_item_by_id(request: Request, item_id: int, db: Session = Depends(get_
             request, "partials/item_table_body.html", {"items": get_items_sorted(db)}
         )
     return {"message": "Item deleted successfully"}
+
+@app.delete("/items/all")
+def delete_all_items(db: Session = Depends(get_db)):
+    count = db.query(Item).delete()
+    db.commit()
+    return {"message": f"Deleted {count} items successfully"}
 
 @app.delete("/items/name/{item_name}")
 def delete_item_by_name(item_name: str, db: Session = Depends(get_db)):
