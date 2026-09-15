@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Depends, Request, Form
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
-from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy import create_engine, Column, Integer, String, func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from pydantic import BaseModel
@@ -51,13 +51,19 @@ def get_db():
 
 @app.get("/", response_class=HTMLResponse)
 def read_root(request: Request, db: Session = Depends(get_db)):
-    items = db.query(Item).all()
+    items = db.query(Item).order_by(Item.name).all()
     return templates.TemplateResponse(
         request, "index.html", {"items": items}
     )
 
+def get_items_sorted(db: Session):
+    return db.query(Item).order_by(Item.name).all()
+
 @app.post("/items/", response_model=ItemResponse)
 def add_item(item: ItemCreate, db: Session = Depends(get_db)):
+    existing = db.query(Item).filter(func.lower(Item.name) == item.name.lower()).first()
+    if existing:
+        raise HTTPException(status_code=409, detail=f"Item with name '{item.name}' already exists")
     db_item = Item(**item.model_dump())
     db.add(db_item)
     db.commit()
@@ -73,27 +79,65 @@ def add_item_form(
     quantity: int = Form(0),
     db: Session = Depends(get_db)
 ):
+    existing = db.query(Item).filter(func.lower(Item.name) == name.lower()).first()
+    if existing:
+        return templates.TemplateResponse(
+            request,
+            "partials/error_message.html",
+            {"message": f"Item '{name}' already exists."},
+            headers={"HX-Retarget": "#form-error", "HX-Reswap": "innerHTML"},
+        )
     db_item = Item(name=name, description=description, quantity=quantity)
     db.add(db_item)
     db.commit()
     db.refresh(db_item)
     return templates.TemplateResponse(
-        request, "partials/item_row.html", {"item": db_item}
+        request, "partials/item_table.html", {"items": get_items_sorted(db)}
+    )
+
+@app.post("/items/{item_id}/adjust", response_class=HTMLResponse)
+def adjust_item_quantity(
+    request: Request,
+    item_id: int,
+    delta: int = Form(...),
+    db: Session = Depends(get_db)
+):
+    item = db.query(Item).filter(Item.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    item.quantity = max(0, item.quantity + delta)
+    db.commit()
+    return templates.TemplateResponse(
+        request, "partials/item_table.html", {"items": get_items_sorted(db)}
     )
 
 @app.get("/items/", response_model=List[ItemResponse])
 def list_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    items = db.query(Item).offset(skip).limit(limit).all()
+    items = db.query(Item).order_by(Item.name).offset(skip).limit(limit).all()
     return items
 
+@app.delete("/items/all")
+def delete_all_items(request: Request, db: Session = Depends(get_db)):
+    count = db.query(Item).delete()
+    db.commit()
+    if request.headers.get("HX-Request"):
+        return templates.TemplateResponse(
+            request, "partials/item_table.html", {"items": get_items_sorted(db)}
+        )
+    return {"message": f"Deleted {count} items successfully"}
+
 @app.delete("/items/{item_id}")
-def delete_item_by_id(item_id: int, db: Session = Depends(get_db)):
+def delete_item_by_id(request: Request, item_id: int, db: Session = Depends(get_db)):
     item = db.query(Item).filter(Item.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
     db.delete(item)
     db.commit()
-    return ""
+    if request.headers.get("HX-Request"):
+        return templates.TemplateResponse(
+            request, "partials/item_table.html", {"items": get_items_sorted(db)}
+        )
+    return {"message": "Item deleted successfully"}
 
 @app.delete("/items/name/{item_name}")
 def delete_item_by_name(item_name: str, db: Session = Depends(get_db)):

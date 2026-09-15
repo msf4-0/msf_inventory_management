@@ -1,8 +1,8 @@
-<form 
-    hx-post="/items/form" 
-    hx-target="#table-body" 
-    hx-swap="beforeend"
-    hx-on::after-request="if(event.detail.successful) this.reset()"
+<form
+    hx-post="/items/form"
+    hx-target="#table-section"
+    hx-swap="outerHTML"
+    hx-on::after-request="if(event.detail.successful) { this.reset(); document.getElementById('form-error').innerHTML = ''; }"
 >
     <div class="grid" style="grid-template-columns: 1fr 2fr 2fr 1fr auto; gap: 0.5rem; align-items: end;">
         <div>
@@ -21,4 +21,5 @@
             <button type="submit" class="primary">Add Item</button>
         </div>
     </div>
+    <div id="form-error"></div>
 </form>

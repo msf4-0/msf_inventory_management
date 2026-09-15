@@ -17,10 +17,10 @@ venv/bin/pip install fastapi uvicorn sqlalchemy pydantic jinja2
 
 ```bash
 # Development (auto-reload)
-venv/bin/uvicorn main:app --reload
+venv/Scripts/uvicorn main:app --reload
 
 # Production
-venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
+venv/Scripts/uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
 Server runs at `http://localhost:8000`. 

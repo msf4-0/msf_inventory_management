@@ -1,18 +1,20 @@
 # MSF Inventory Management - Agent Guidelines
 
 ## Project State
-- Early-stage Python 3.12 project
-- Virtual environment at `venv/` (Python 3.12.3)
+- Windows (PowerShell) project
+- Early-stage Python project
+- Virtual environment at `venv/` (system Python 3.14.0)
 - FastAPI backend with SQLite database
 - HTMX + Jinja2 web UI
 - Source: `main.py`
 
 ## Commands
-- Activate venv: `source venv/bin/activate`
-- Python: `venv/bin/python`
-- Pip: `venv/bin/pip`
-- Run server: `venv/bin/uvicorn main:app --reload`
-- Run server (prod): `venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000`
+- Create venv: `python -m venv venv`
+- Activate venv: `venv\Scripts\Activate.ps1`
+- Python: `venv\Scripts\python`
+- Pip: `venv\Scripts\pip`
+- Run server: `venv\Scripts\uvicorn main:app --reload`
+- Run server (prod): `venv\Scripts\uvicorn main:app --host 0.0.0.0 --port 8000`
 
 ## API Endpoints
 - GET `/` - Web UI (HTMX + Jinja2)

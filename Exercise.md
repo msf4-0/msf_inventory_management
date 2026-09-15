@@ -8,6 +8,4 @@ Perform the following using the help of AI:
 2. Add checking of duplicate item name entry to prevent from adding entry with same name.
 3. Create function to increase/decrease the quantity of an item.
 4. Modify the UI to account for the new functionalities. 
-5. Get UI to sort the items alphabetically and reset the index.
-
-# Exercise 3: Refactoring
+5. Get UI to sort the items alphabetically and reset the index. This should happen at the start, and whenever new items are added/deleted.
