@@ -5,7 +5,7 @@ from starlette.templating import Jinja2Templates
 from sqlalchemy import create_engine, Column, Integer, String, func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import List, Optional
 
 DATABASE_URL = "sqlite:///./inventory.db"
@@ -27,6 +27,14 @@ class ItemCreate(BaseModel):
     name: str
     description: Optional[str] = None
     quantity: int = 0
+
+    @field_validator("name")
+    @classmethod
+    def name_not_blank(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("Item name cannot be blank")
+        return v
 
 class ItemResponse(BaseModel):
     id: int
@@ -51,13 +59,13 @@ def get_db():
 
 @app.get("/", response_class=HTMLResponse)
 def read_root(request: Request, db: Session = Depends(get_db)):
-    items = db.query(Item).order_by(Item.name).all()
+    items = db.query(Item).order_by(func.lower(Item.name)).all()
     return templates.TemplateResponse(
         request, "index.html", {"items": items}
     )
 
 def get_items_sorted(db: Session):
-    return db.query(Item).order_by(Item.name).all()
+    return db.query(Item).order_by(func.lower(Item.name)).all()
 
 @app.post("/items/", response_model=ItemResponse)
 def add_item(item: ItemCreate, db: Session = Depends(get_db)):
@@ -79,6 +87,14 @@ def add_item_form(
     quantity: int = Form(0),
     db: Session = Depends(get_db)
 ):
+    name = name.strip()
+    if not name:
+        return templates.TemplateResponse(
+            request,
+            "partials/error_message.html",
+            {"message": "Item name cannot be blank."},
+            headers={"HX-Retarget": "#form-error", "HX-Reswap": "innerHTML"},
+        )
     existing = db.query(Item).filter(func.lower(Item.name) == name.lower()).first()
     if existing:
         return templates.TemplateResponse(
@@ -113,7 +129,7 @@ def adjust_item_quantity(
 
 @app.get("/items/", response_model=List[ItemResponse])
 def list_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    items = db.query(Item).order_by(Item.name).offset(skip).limit(limit).all()
+    items = db.query(Item).order_by(func.lower(Item.name)).offset(skip).limit(limit).all()
     return items
 
 @app.delete("/items/all")
