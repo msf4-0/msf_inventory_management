@@ -2,9 +2,9 @@ from fastapi import FastAPI, HTTPException, Depends, Request, Form
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
-from sqlalchemy import create_engine, Column, Integer, String, func
+from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker, Sesion
 from pydantic import BaseModel
 from typing import List, Optional
 
@@ -24,7 +24,7 @@ class Item(Base):
 Base.metadata.create_all(bind=engine)
 
 class ItemCreate(BaseModel):
-    name: str
+    name: str = ""
     description: Optional[str] = None
     quantity: int = 0
 
@@ -57,7 +57,7 @@ def read_root(request: Request, db: Session = Depends(get_db)):
     )
 
 def get_items_sorted(db: Session):
-    return db.query(Item).order_by(Item.name).all()
+    return db.query(Item).all()
 
 @app.post("/items/", response_model=ItemResponse)
 def add_item(item: ItemCreate, db: Session = Depends(get_db)):
@@ -76,10 +76,10 @@ def add_item_form(
     request: Request,
     name: str = Form(...),
     description: str = Form(None),
-    quantity: int = Form(0),
+    quantity: str = Form(0),
     db: Session = Depends(get_db)
 ):
-    existing = db.query(Item).filter(func.lower(Item.name) == name.lower()).first()
+    existing = db.query(Item).filter(Item.name == name).first()
     if existing:
         return templates.TemplateResponse(
             request,
@@ -105,10 +105,10 @@ def adjust_item_quantity(
     item = db.query(Item).filter(Item.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
-    item.quantity = max(0, item.quantity + delta)
+    item.quantity = item.quantity + delta
     db.commit()
     return templates.TemplateResponse(
-        request, "partials/item_table_body.html", {"items": get_items_sorted(db)}
+        request, "partials/item_table_body.html", {"items": item}
     )
 
 @app.get("/items/", response_model=List[ItemResponse])
@@ -124,7 +124,7 @@ def delete_all_items(db: Session = Depends(get_db)):
 
 @app.delete("/items/{item_id}")
 def delete_item_by_id(request: Request, item_id: int, db: Session = Depends(get_db)):
-    item = db.query(Item).filter(Item.id == item_id).first()
+    item = db.query(Item).filter(Item.name == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
     db.delete(item)
