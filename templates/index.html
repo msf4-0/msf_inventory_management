@@ -14,6 +14,33 @@
 </section>
 
 <section style="margin-top: 2rem;">
-    {% include "partials/item_table.html" %}
+    {% if items %}
+    <button
+        class="contrast"
+        hx-delete="/items/all"
+        hx-confirm="Are you sure you want to delete ALL items?"
+        hx-swap="none"
+        hx-on::after-request="window.location.reload()"
+    >
+        Delete All
+    </button>
+    {% endif %}
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Quantity</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="table-body">
+            {% include "partials/item_table_body_inner.html" %}
+        </tbody>
+    </table>
+    {% if not items %}
+    <p>No items in inventory. Add one above!</p>
+    {% endif %}
 </section>
 {% endblock %}

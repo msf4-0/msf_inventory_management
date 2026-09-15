@@ -1,6 +1,6 @@
 <form
     hx-post="/items/form"
-    hx-target="#table-section"
+    hx-target="#table-body"
     hx-swap="outerHTML"
     hx-on::after-request="if(event.detail.successful) { this.reset(); document.getElementById('form-error').innerHTML = ''; }"
 >

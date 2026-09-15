@@ -8,7 +8,7 @@
                 class="outline"
                 hx-post="/items/{{ item.id }}/adjust"
                 hx-vals='{"delta": -1}'
-                hx-target="#table-section"
+                hx-target="#table-body"
                 hx-swap="outerHTML"
             >&minus;</button>
             {{ item.quantity }}
@@ -16,7 +16,7 @@
                 class="outline"
                 hx-post="/items/{{ item.id }}/adjust"
                 hx-vals='{"delta": 1}'
-                hx-target="#table-section"
+                hx-target="#table-body"
                 hx-swap="outerHTML"
             >+</button>
         </span>
@@ -26,7 +26,7 @@
             class="contrast"
             hx-delete="/items/{{ item.id }}"
             hx-confirm="Are you sure you want to delete this item?"
-            hx-target="#table-section"
+            hx-target="#table-body"
             hx-swap="outerHTML"
         >
             Delete

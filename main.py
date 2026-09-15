@@ -92,7 +92,7 @@ def add_item_form(
     db.commit()
     db.refresh(db_item)
     return templates.TemplateResponse(
-        request, "partials/item_table.html", {"items": get_items_sorted(db)}
+        request, "partials/item_table_body.html", {"items": get_items_sorted(db)}
     )
 
 @app.post("/items/{item_id}/adjust", response_class=HTMLResponse)
@@ -108,7 +108,7 @@ def adjust_item_quantity(
     item.quantity = max(0, item.quantity + delta)
     db.commit()
     return templates.TemplateResponse(
-        request, "partials/item_table.html", {"items": get_items_sorted(db)}
+        request, "partials/item_table_body.html", {"items": get_items_sorted(db)}
     )
 
 @app.get("/items/", response_model=List[ItemResponse])
@@ -117,13 +117,9 @@ def list_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return items
 
 @app.delete("/items/all")
-def delete_all_items(request: Request, db: Session = Depends(get_db)):
+def delete_all_items(db: Session = Depends(get_db)):
     count = db.query(Item).delete()
     db.commit()
-    if request.headers.get("HX-Request"):
-        return templates.TemplateResponse(
-            request, "partials/item_table.html", {"items": get_items_sorted(db)}
-        )
     return {"message": f"Deleted {count} items successfully"}
 
 @app.delete("/items/{item_id}")
@@ -135,7 +131,7 @@ def delete_item_by_id(request: Request, item_id: int, db: Session = Depends(get_
     db.commit()
     if request.headers.get("HX-Request"):
         return templates.TemplateResponse(
-            request, "partials/item_table.html", {"items": get_items_sorted(db)}
+            request, "partials/item_table_body.html", {"items": get_items_sorted(db)}
         )
     return {"message": "Item deleted successfully"}
 
