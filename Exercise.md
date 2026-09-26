@@ -9,5 +9,3 @@ Perform the following using the help of AI:
 3. Create function to increase/decrease the quantity of an item.
 4. Modify the UI to account for the new functionalities. 
 5. Get UI to sort the items alphabetically and reset the index.
-
-# Exercise 3: Refactoring
